@@ -19,7 +19,6 @@ package com.dataartisans;
  */
 
 import org.apache.flink.api.common.functions.FlatMapFunction;
-import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -44,7 +43,7 @@ public class TwitterIntoKafka {
 		ParameterTool params = ParameterTool.fromPropertiesFile(args[0]);
 		DataStream<String> twitterStreamString = env.addSource(new TwitterSource(params.getProperties()));
 		DataStream<String> filteredStream = twitterStreamString.flatMap(new ParseJson());
-		filteredStream.flatMap(new ThroughputLogger(100L)).setParallelism(1);
+		filteredStream.flatMap(new ThroughputLogger(5000L)).setParallelism(1);
 
 		filteredStream.addSink(new FlinkKafkaProducer09<>("twitter", new SimpleStringSchema(), params.getProperties()));
 
@@ -69,8 +68,6 @@ public class TwitterIntoKafka {
 			boolean hasText = jsonNode.has("text");
 			if (hasText) {
 				out.collect(value);
-			} else {
-				System.out.println("Doesn't have text: " + value);
 			}
 		}
 	}
